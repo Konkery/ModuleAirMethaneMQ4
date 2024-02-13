@@ -88,20 +88,6 @@ class ClassAirMethaneMQ4 extends ClassMiddleSensor {
         setTimeout(() => this.Start(freq), this._Minfrequency);
     }
     /**
-     * @method
-     * Меняет режим работы датчика через 10 секунд
-     * @param {Object} _opts    - объект, содержащий новый режим датчика
-     */
-    ConfigureRegs(_opts) {
-        if (Number.isInteger(_opts.mode) && _opts.mode >= 0 && _opts.mode <= 4) {
-            this._CanRead = false;
-            setTimeout (() => {
-                this._Sensor.setMode(_opts.mode);
-            }, 10000);
-            this._CanRead = true;
-        }   
-    }
-    /**
      * @methhod
      * Останавливает сбор данных с датчика
      * @param {Number} _num_channel   - номер канала, в который должен быть остановлен поток данных
