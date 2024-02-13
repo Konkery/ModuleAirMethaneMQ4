@@ -46,7 +46,7 @@ sensor = new ClassAirMethaneMQ4 (_opts, _sensor_props)
 - <mark style="background-color: lightblue">heatPin</mark> - номер пина, через который будет осуществляться контроль нагревателя датчика;
 - <mark style="background-color: lightblue">bus</mark> - объект класса I2C, возвращаемый диспетчером I2C шин - [I2Cbus](https://github.com/Konkery/ModuleBaseI2CBus/blob/main/README.md);
 - <mark style="background-color: lightblue">model</mark> - имя модели датчика из серии MQX, нужно для выбора правильного преобразования в базовом классе;
-- <mark style="background-color: lightblue">baseline</mark> - норма концентрации паров спирта в помещении, где проводится измерение. Является корректирующей величиной;
+- <mark style="background-color: lightblue">baseline</mark> - норма концентрации природного газа в помещении, где проводится измерение. Является корректирующей величиной;
 </div>
 
 ### Поля
