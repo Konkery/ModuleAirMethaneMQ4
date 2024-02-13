@@ -23,7 +23,7 @@ let sensor_props = {
                 "Sensory": "5599"
             }
         ],
-        HelpSens: "MQ4 Air Carbonyl"
+        HelpSens: "MQ4 Air Methane"
     }
 };
 
