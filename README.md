@@ -1,6 +1,6 @@
 <div style = "font-family: 'Open Sans', sans-serif; font-size: 16px">
 
-# ModuleAirAlcoholMQ3
+# ModuleAirMethaneMQ4
 <p align="center">
   <img src="./res/logo.png" width="400" title="hover text">
 </p>
@@ -13,9 +13,8 @@
 # Описание
 <div style = "color: #555">
 
-Модуль предназначен для работы с датчиком природного газа на базе нагревательного элемента [MQ-4](https://github.com/Konkery/ModuleAirMethaneMQ4/blob/main/res/MQ4_datasheet.pdf). Модуль является неотъемлемой частью фреймворка EcoLite. Датчик MQ-4 позволяет получить данные о концентрации метана в воздухе. Модуль работает по интерфейсу I2C. Модуль имеет следующие архитектурные решения фреймворка EcoLite:
-- является потомком класса [ClassMiddleSensor](https://github.com/Konkery/ModuleSensorArchitecture/blob/main/README.md);
-- использует шину через глобальный объект [I2Cbus](https://github.com/Konkery/ModuleBaseI2CBus/blob/main/README.md).
+Модуль предназначен для работы с аналоговым датчиком природного газа на базе нагревательного элемента [MQ-4](https://github.com/Konkery/ModuleAirMethaneMQ4/blob/main/res/MQ4_datasheet.pdf). Модуль является неотъемлемой частью фреймворка EcoLite. Датчик MQ-4 позволяет получить данные о концентрации метана в воздухе. В модуле предусмотрено управление встроенным нагревателем. Следует учесть, что управление осуществляется при отсутствии джампера 'H=V', который включает нагреватель при подаче напряжения. Модуль имеет следующие архитектурные решения фреймворка EcoLite:
+- является потомком класса [ClassMiddleSensor](https://github.com/Konkery/ModuleSensorArchitecture/blob/main/README.md).
  
 Количество каналов для снятия данных - 1.
 </div>
@@ -65,6 +64,8 @@ sensor = new ClassAirMethaneMQ4 (_opts, _sensor_props)
 
 - <mark style="background-color: lightblue">Init(_sensor_props)</mark> - необходим для первоначальной настройки датчика;
 - <mark style="background-color: lightblue">ControlHeater(_val)</mark> - контролирует нагрев датчика;
+- <mark style="background-color: lightblue">Calibrate(_val)</mark> - калибрует датчик. Если значение не передано, датчик калибруется автоматически;
+- <mark style="background-color: lightblue">Preheat()</mark> - запускает полный нагрев датчика на 30 секунд. Во время нагрева нельзя считаь данные с датчика. После выполнения метода нагреватель остаётся включенным;
 - <mark style="background-color: lightblue">Start(_num_channel, _period)</mark> - запускает циклический опрос заданного канала датчика. Переданное значение периода сверяется с минимальным значением хранящимся в поле *_minPeriod* и, если требуется, регулируется;
 - <mark style="background-color: lightblue">ChangeFreq(_num_channel, _period)</mark> - останавливает опрос заданного канала и запускает его вновь с уже новой частотой;
 - <mark style="background-color: lightblue">Stop(_num_channel)</mark> - прекращает считывание значений с заданного канала.
@@ -73,7 +74,7 @@ sensor = new ClassAirMethaneMQ4 (_opts, _sensor_props)
 ### Возвращаемые данные
 <div style = "color: #555">
 
-
+Датчик возвращает значения концентрации природного газа в миллионных долях (ppm).
 </div>
 
 
@@ -83,17 +84,49 @@ sensor = new ClassAirMethaneMQ4 (_opts, _sensor_props)
 Фрагмент кода для вывода данных о давлении и температуре в консоль раз в одну секунду. Предполагается, что все необходимые модули уже загружены в систему:
 ```js
 //Подключение необходимых модулей
-const ClassI2CBus = require("ClassBaseI2CBus.min.js");
 const err = require("ModuleAppError.min.js");
 const NumIs = require("ModuleAppMath.min.js");
      NumIs.is(); //добавить функцию проверки целочисленных чисел в Number
 
-//Создание I2C шины
-let I2Cbus = new ClassI2CBus();
-let bus = I2Cbus.AddBus({sda: B9, scl: B8, bitrate: 400000}).IDbus;
-
+const gasClass = require('ClassAirMethaneMQ4.min.js');
 //Настройка передаваемых объектов
+let opts = {pins: [A0, P10], quantityChannel: 1};
+let sensor_props = {
+    name: "MQ4",
+    type: "sensor",
+    channelNames: ['methane'],
+    typeInSignal: "analog",
+    typeOutSignal: "analog",
+    quantityChannel: 1,
+    busType: [],
+    manufacturingData: {
+        IDManufacturing: [
+            {
+                "GasMeter": "A2655"
+            }
+        ],
+        IDsupplier: [
+            {
+                "Sensory": "5599"
+            }
+        ],
+        HelpSens: "MQ4 Air Methane"
+    }
+};
+//Создание класса
+let gas = new gasClass(opts, sensor_props);
 
+//Нагрев и каллибровка
+gas.Preheat();
+gas.Calibrate();
+
+const ch0 = gas.GetChannel(0);
+ch0.Start(1000);
+
+//Вывод данных
+setInterval(() => {
+  console.log(`CH4: ${(ch0.Value).toFixed(2)} ppm`);
+}, 1000);
 ```
 Вывод данных в консоль:
 <p align="left">
@@ -102,7 +135,6 @@ let bus = I2Cbus.AddBus({sda: B9, scl: B8, bitrate: 400000}).IDbus;
 <div>
 
 # Зависимости
-- [ClassBaseI2CBus](https://github.com/Konkery/ModuleBaseI2CBus/blob/main/README.md)
 - [ModuleAppError](https://github.com/Konkery/ModuleAppError/blob/main/README.md)
 - [ModuleAppMath](https://github.com/Konkery/ModuleAppMath/blob/main/README.md)
 </div>
